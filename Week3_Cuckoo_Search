@@ -1,0 +1,68 @@
+
+import random
+import math
+
+# EV charging optimization using Cuckoo Search
+
+n = 10       # Number of nests
+iterations = 50
+ev = 5       # Number of electric vehicles
+
+# Electricity price for each EV
+price = [5, 4, 6, 3, 7]
+
+# Required charging energy (kWh)
+energy = [10, 15, 12, 8, 14]
+
+# Maximum charging power (kW)
+max_power = [7, 7, 7, 7, 7]
+
+# Generate random nests
+nests = [[random.uniform(1, max_power[j])
+          for j in range(ev)] for i in range(n)]
+
+# Fitness function: minimize charging cost
+def fitness(x):
+    cost = 0
+    for j in range(ev):
+        cost += price[j] * x[j]
+    return cost
+
+# Cuckoo Search
+best = nests[0]
+
+for t in range(iterations):
+
+    for i in range(n):
+
+        # Generate new solution using Levy flight
+        new = nests[i].copy()
+
+        for j in range(ev):
+            step = random.gauss(0, 1)
+            new[j] += step
+
+            # Keep power within limits
+            new[j] = max(1, min(max_power[j], new[j]))
+
+        # Select a random nest
+        k = random.randint(0, n - 1)
+
+        if fitness(new) < fitness(nests[k]):
+            nests[k] = new
+
+        # Update best solution
+        if fitness(nests[k]) < fitness(best):
+            best = nests[k].copy()
+
+    # Abandon some nests
+    for i in range(n):
+        if random.random() < 0.25:
+            nests[i] = [random.uniform(1, max_power[j])
+                        for j in range(ev)]
+
+print("Optimal Charging Power:")
+for j in range(ev):
+    print("EV", j + 1, ":", round(best[j], 2), "kW")
+
+print("Minimum Charging Cost:", round(fitness(best), 2))
